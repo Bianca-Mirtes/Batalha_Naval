@@ -17,7 +17,7 @@
     ```
      node server.js 
     ```
-2. Abrir um navegador de sua preferência e entrar no seguinte site: http://localhost:8081/
+2. Abrir um navegador de sua preferência e entrar no seguinte site: <a href="http://localhost:8081/" target="_blank">http://localhost:8081/</a>
 
 ## 💣 Prepare-se para a batalha
 
