@@ -9,15 +9,15 @@
  - Node JS
 
 ### 💻 Instruções de Instalação
-    1. Baixar os arquivos contidos no repositorio;
-    2. Extrair os arquivos do .zip gerado;
+1. Baixar os arquivos contidos no repositorio;
+2. Extrair os arquivos do .zip gerado;
 
 ### 💻 Instruções de Execução
-    1. Abrir um terminal na pasta BatalhaNaval (tendo já o Node JS instalado) e inicialize o servidor executando o comando:
+1. Abrir um terminal na pasta BatalhaNaval (tendo já o Node JS instalado) e inicialize o servidor executando o comando:
     ```
-         node server.js 
+     node server.js 
     ```
-    2. Abrir um navegador de sua preferência e entrar no seguinte site: http://localhost:8081/
+2. Abrir um navegador de sua preferência e entrar no seguinte site: http://localhost:8081/
 
 ## 💣 Prepare-se para a batalha
 
