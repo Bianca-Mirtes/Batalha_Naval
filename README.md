@@ -1,7 +1,7 @@
 <h1 align="center"> 
 	Batalha Naval: Prepare-se para o combate!
 </h1>
-<h3 style="text-align: center;">⚔️ Afunde a frota do seu oponente e reivindique a vitória neste clássico jogo de estratégia naval ⚔️</h3>
+<h3 align="center">⚔️ Afunde a frota do seu oponente e reivindique a vitória neste clássico jogo de estratégia naval ⚔️</h3>
 
 ## ⚓ Prepare-se para a aventura
 
