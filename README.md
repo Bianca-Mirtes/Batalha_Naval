@@ -13,7 +13,7 @@
 2. Extrair os arquivos do .zip gerado;
 
 ### 💻 Instruções de Execução
-1. Abrir um terminal na pasta BatalhaNaval (tendo já o Node JS instalado) e inicialize o servidor executando o comando:
+1. Abrir um terminal na pasta Batalha_Naval-main (ou se guie pelo local que contiver o arquivo *.html*, em caso de distinção de nome) e inicialize o servidor executando o comando:
     ```
      node server.js 
     ```
