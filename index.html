@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha Naval</title>
+</head>
+<body id="body">
+    <header>
+        <button id="reset_map">Reset Map</button>        
+        <h2>Batalha Naval</h2>
+        <button id="ready_for_play">Ready</button>
+    </header>
+    <div id="fundo"></div>
+    <div id="caixa">
+        <h3 id="textBox">Esperando oponente...</h3>
+    </div>
+    <div class="container_play1">
+        <section id="tabuleiro1" class="tabuleiro1" name="tabuleiro1">
+            <div id="numeros" class="numeros"></div>
+            <div class="drop_container" name="container">
+                <div id="tabuleiro" class="tabuleiro" name="tabuleiro1"></div>                 
+            </div>
+            <div id="letras" class="letras"></div>  
+        </section>
+        <div class="drag_container1" id="drag_container1">
+            <div class="cruzadorD drag" id="cruzadorD drag" draggable="true"></div>
+            <div class="submarinoD drag" id="submarinoD drag" draggable="true"></div>
+            <div class="encouracadoD drag" id="encouracadoD drag" draggable="true"></div>
+        </div>
+        <div class="drag_container2" id="drag_container2">
+            <div class="hidroAviaoD drag" id="hidroAviaoD drag" draggable="true"></div>
+            <div class="portaAviaoD drag" id="portaAviaoD drag" draggable="true"></div>
+        </div>        
+    </div>
+    <div class="container_play2" id="container_play2">
+        <div id="numeros" class="numeros"></div>
+        <div id="tabuleiro" class="tabuleiro" name="tabuleiro2"></div>
+        <div id="letras" class="letras"></div> 
+    </div>
+    <script>
+        let ws = new WebSocket('ws://localhost:8080');
+
+        ws.onopen = function(event) {
+            console.log('Conexão estabelecida');
+        };
+
+        ws.onerror = function(event) {
+            console.error('Erro de WebSocket detectado:', event);
+        };
+
+        let clientID = null;
+        let gameID = null;
+        let pontuacao = 0;
+
+        const btnReady = document.getElementById('ready_for_play');
+
+        btnReady.addEventListener('click', () =>{
+            // estado de espera
+            const caixa = document.getElementById('caixa');
+            const fundo = document.getElementById('fundo');
+            const body = document.getElementById('body');
+            caixa.style.display = 'block';
+            fundo.style.display = "block";
+            body.style.pointerEvents = "none";
+
+            // transferencia do mapa
+            let mapa = "";
+                dropItems.forEach(navio => {
+                    if(navio.classList.length > 1){
+                        mapa += "-1-";
+                    }else{
+                        mapa += "-0-"
+                    }
+                 });    
+            const mapaSub = mapa.substring(1, mapa.length-1);
+
+            const payload = {
+                'method': 'ready',
+                'map' : mapaSub,
+                'clientID' : clientID
+            }
+            ws.send(JSON.stringify(payload));
+        });
+
+        ws.onmessage = function(message) {
+            let msg = JSON.parse(message.data);
+            console.log('Mensagem do servidor:', msg);
+
+            //connect
+            if(msg.method === "connect"){
+                clientID = msg.clientID;
+            }
+
+            // Venceu o jogo!!
+            if(msg.method === 'Winner'){
+                const caixa = document.getElementById('caixa');
+                const fundo = document.getElementById('fundo');
+                const body = document.getElementById('body');
+                caixa.style.display = 'block';
+                fundo.style.display = "block";
+                body.style.pointerEvents = "none";
+                const text = document.getElementById('textBox');
+                text.innerHTML = 'Winner!!!';
+            }
+
+            // Perdeu o jogo
+            if(msg.method === 'Loser'){
+                const caixa = document.getElementById('caixa');
+                const fundo = document.getElementById('fundo');
+                const body = document.getElementById('body');
+                caixa.style.display = 'block';
+                fundo.style.display = "block";
+                body.style.pointerEvents = "none";
+                const text = document.getElementById('textBox');
+                text.innerHTML = 'Loser!!!';
+            }
+
+            if(msg.method === 'MapOponente'){ // recebe mapa do oponente
+                gameID = msg.gameID;
+                const caixa = document.getElementById('caixa');
+                const fundo = document.getElementById('fundo');
+                const body = document.getElementById('body');
+                const container = document.getElementById("container_play2")
+                container.style.display = "table-cell";
+                caixa.style.display = 'none';
+                fundo.style.display = "none";
+                body.style.pointerEvents = "all";
+                const tabuleiros = document.querySelectorAll('.tabuleiro');
+                tabuleiros.forEach((elem) => {
+                    if(elem.getAttribute("name") === "tabuleiro2"){
+                        const childrens = elem.children;
+                        for(var ii=0; ii < childrens.length; ii++){
+                            if(msg.map[ii] === "0"){
+                                childrens[ii].className = 'celula';
+                            }else{
+                                childrens[ii].className = 'celula navio';
+                                const linha = parseInt(childrens[ii].dataset.linha);
+                                const coluna = parseInt(childrens[ii].dataset.coluna);
+                                naviosOp.add({linha, coluna})
+                            }
+                        }
+                    }
+                })
+                const payload = {
+                    'method' : 'InitGame',
+                    'gameID': gameID 
+                }
+                ws.send(JSON.stringify(payload))
+            }
+
+            if(msg.method === "oponenteChance"){
+                const tabuleiro = document.getElementsByName("tabuleiro2");
+                tabuleiro[0].style.pointerEvents = "none";
+
+                if(msg.tiro !== null){
+                    const regex = /\s+/g;
+                    const coords = msg.tiro.split(regex);
+                    const celulas = document.querySelectorAll(`.celula[data-linha="${parseInt(coords[0])}"][data-coluna="${parseInt(coords[1])}"]`);
+                    celulas[0].classList.add('tiro-acertado'); // oponente acertou e agora e a vez dele                
+                }
+            }
+            if(msg.method === "playChance"){
+                const tabuleiro = document.getElementsByName("tabuleiro2");
+                tabuleiro[0].style.pointerEvents = "all";
+
+                if(msg.tiro !== null){
+                    const regex = /\s+/g;
+                    const coords = msg.tiro.split(regex);
+                    const celulas = document.querySelectorAll(`.celula[data-linha="${parseInt(coords[0])}"][data-coluna="${parseInt(coords[1])}"]`);
+                    celulas[0].classList.add('tiro-falhado'); // oponente errou e agora é a sua vez                  
+                }
+            }
+        };
+    </script>
+    <script>
+        const TAMANHO_TABULEIRO = 10;
+        const alfabeto = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+        const numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let tiros = []; // Posições dos tiros
+
+        function gerarTabuleiro() {
+            let count = 0;
+            const tabuleiros = document.querySelectorAll('.tabuleiro');
+            const numeros = document.querySelectorAll('.numeros');
+            const letras =document.querySelectorAll('.letras');
+            tabuleiros.forEach(tabuleiro => {
+                if(tabuleiro.getAttribute('name') === 'tabuleiro2'){
+                        tabuleiro.addEventListener('click', function(event) {
+                        const celula = event.target;
+                        if (!celula.classList.contains('celula')){
+                            return;
+                        }
+
+                        const linha = parseInt(celula.dataset.linha);
+                        const coluna = parseInt(celula.dataset.coluna);
+
+                        const resultado = verificarTiro(linha, coluna);
+
+                        marcarTiro(linha, coluna, resultado);
+                    });
+                }
+                for (let i = 0; i < TAMANHO_TABULEIRO; i++) {
+                    for (let j = 0; j < TAMANHO_TABULEIRO; j++) {
+                        if(j==0){
+                            const number = document.createElement('p');
+                            number.classList.add('numero');
+                            number.textContent = `${i+1}`;
+                            numeros[count].appendChild(number);
+
+                        }
+                        if(i==9){
+                            const letter = document.createElement('p');
+                            letter.classList.add('letra');
+                            letter.textContent = `${alfabeto[j]}`;
+                            letras[count].appendChild(letter);
+                        }
+                        const celula = document.createElement('div');
+                        celula.classList.add('celula');
+                        celula.dataset.linha = i;
+                        celula.dataset.coluna = j;
+
+                        tabuleiro.appendChild(celula);
+                    }
+                }        
+                count++;
+            });
+        }
+        gerarTabuleiro();
+    </script>
+    <script>
+        const dragItems = document.querySelectorAll('.drag');
+        const dropItems = document.querySelectorAll('.celula');
+        const btnResetMap = document.getElementById('reset_map');
+
+        let countCruzador = 3;
+        let countHidroAviao = 3;
+        let countEncouracado = 2;
+        let countSubmarino = 4;
+
+        let navios = new Set();
+        let naviosOp = new Set();
+
+        let countSlot = 13;
+
+        btnReady.disabled = true;
+
+        btnResetMap.addEventListener('click', () => {
+            dropItems.forEach(navio => {
+                navio.addEventListener('dragover', dragOver);
+                navio.addEventListener( 'drop', dropEvent);
+                navio.addEventListener('dragleave', dragLeave);
+                navio.className = 'celula';
+            });
+            countCruzador = 3;
+            countHidroAviao = 3;
+            countEncouracado = 2;
+            countSubmarino = 4;
+
+            dragItems.forEach( navio => {
+                navio.className = navio.id;
+            });
+        });
+
+        // Drag events
+        dragItems.forEach(navio => {
+            navio.addEventListener("dragstart", dragStart);
+        });
+
+        // Drop Events
+        dropItems.forEach(celula => {
+            celula.addEventListener('dragover', dragOver);
+            celula.addEventListener( 'drop', dropEvent);
+            celula.addEventListener('dragleave', dragLeave);
+        });
+
+        function dragStart(e){
+            e.dataTransfer.setData("text", e.target.className)
+            setTimeout(() =>{
+                this.className = 'invisible';
+            }, 0);
+        }
+
+        function dragOver(e){
+            e.preventDefault();
+            this.className += ' enter';
+        }
+
+        function dragLeave(e){
+            e.preventDefault();
+            this.className = 'celula';
+        }
+
+        function dropEvent(e){
+            e.preventDefault();
+
+            const navioClass = e.dataTransfer.getData("text");
+            const celula = document.querySelector(`.celula[data-linha="${this.dataset.linha}"][data-coluna="${this.dataset.coluna}"]`);
+            
+            celula.removeEventListener( 'dragover', dragOver);
+            celula.removeEventListener('drop', dropEvent);
+            celula.removeEventListener( 'dragleave', dragLeave);
+
+            if(navioClass === "cruzadorD drag"){
+                celula.classList.add('cruzador');
+                let linha = parseInt(celula.dataset.linha);
+                let coluna = parseInt(celula.dataset.coluna);
+                navios.add({linha, coluna});
+                if(coluna > 8){
+                    --coluna;
+                    const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                    elem.removeEventListener( 'dragover', dragOver);
+                    elem.removeEventListener('drop', dropEvent);
+                    elem.removeEventListener( 'dragleave', dragLeave);
+                    elem.classList.add('cruzador');
+                }else{
+                    ++coluna;
+                    const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                    elem.removeEventListener( 'dragover', dragOver);
+                    elem.removeEventListener('drop', dropEvent);
+                    elem.removeEventListener( 'dragleave', dragLeave);
+                    elem.classList.add('cruzador');          
+                }
+                navios.add({linha, coluna}); 
+                countCruzador--;
+                if(countCruzador != 0){
+                    const elem = document.getElementById('cruzadorD drag')
+                    elem.className = "cruzadorD drag";
+                }else{
+                    countSlot -= 3;
+                }
+            }
+
+            if(navioClass === "portaAviaoD drag"){
+                celula.classList.add('portaAviao');
+                const linha = parseInt(celula.dataset.linha);
+                let coluna = parseInt(celula.dataset.coluna);
+                navios.add({linha, coluna}); 
+                countSlot--;
+                let count = 4;
+                if(coluna > 5){
+                    while(count !=0){
+                        --coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        elem.classList.add('portaAviao');     
+                        count--;
+                        navios.add({linha, coluna});         
+                    }
+                }else{
+                    while(count !=0){
+                        ++coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.classList.add('portaAviao');     
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        count--;
+                        navios.add({linha, coluna});        
+                    }          
+                }  
+            }
+
+            if(navioClass === "encouracadoD drag"){
+                celula.classList.add('encouracado');
+                const linha = parseInt(celula.dataset.linha);
+                let coluna = parseInt(celula.dataset.coluna);
+                navios.add({linha, coluna}); 
+                let count = 3;
+                if(coluna > 6){
+                    while(count !=0){
+                        --coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.classList.add('encouracado');     
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        count--;
+                        navios.add({linha, coluna});        
+                    }
+                }else{
+                    while(count !=0){
+                        ++coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.classList.add('encouracado');     
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        count--;
+                        navios.add({linha, coluna});       
+                    }          
+                }
+                countEncouracado--;
+                if(countEncouracado != 0){
+                    const elem = document.getElementById('encouracadoD drag')
+                    elem.className = "encouracadoD drag";
+                }else{
+                    countSlot -= 2;
+                }
+            }
+
+            if(navioClass === "hidroAviaoD drag"){
+                celula.classList.add('hidroAviao');
+                const linha = parseInt(celula.dataset.linha);
+                let coluna = parseInt(celula.dataset.coluna);
+                navios.add({linha, coluna}); 
+                let count = 2;
+                if(coluna > 7){
+                    while(count !=0){
+                        --coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.classList.add('hidroAviao');
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        count--;        
+                        navios.add({linha, coluna}); 
+                    }
+                }else{
+                    while(count !=0){
+                        ++coluna;
+                        const elem = document.querySelector(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+                        elem.classList.add('hidroAviao');     
+                        elem.removeEventListener( 'dragover', dragOver);
+                        elem.removeEventListener('drop', dropEvent);
+                        elem.removeEventListener( 'dragleave', dragLeave);
+                        count--;        
+                        navios.add({linha, coluna}); 
+                    }          
+                }
+                countHidroAviao--;
+                if(countHidroAviao != 0){
+                    const elem = document.getElementById('hidroAviaoD drag')
+                    elem.className = "hidroAviaoD drag";
+                }else{
+                    countSlot -= 3;
+                }
+            }
+
+            if(navioClass === "submarinoD drag"){
+                celula.classList.add('submarino');
+                const linha = parseInt(celula.dataset.linha);
+                const coluna = parseInt(celula.dataset.coluna);
+                navios.add({linha, coluna}); 
+                countSubmarino--;
+                if(countSubmarino != 0){
+                    const elem = document.getElementById('submarinoD drag')
+                    elem.className = "submarinoD drag";
+                }else{
+                    countSlot -= 4;
+                }
+            }
+
+            // Medida de Segurança Button Ready
+            if(countSlot === 0){
+                btnReady.disabled = false;
+            }
+        }
+
+        // Função para verificar se um tiro acertou um navio
+        function verificarTiro(linha, coluna) {
+            for (const navio of naviosOp) {
+                if (navio.linha === linha && navio.coluna === coluna) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Função para marcar um tiro no tabuleiro
+        function marcarTiro(linha, coluna, resultado) {
+            const celulas = document.querySelectorAll(`.celula[data-linha="${linha}"][data-coluna="${coluna}"]`);
+            if (resultado) {
+                celulas[1].classList.add('tiro-acertado');
+                const payload_game = {
+                    'method' : 'playChance',
+                    'clientID': clientID,
+                    'gameID' : gameID,
+                    'tiro' :  `${linha} ${coluna}`
+                };
+                pontuacao++;
+                if(pontuacao === 32){
+                    const payload_game = {
+                        'method' : 'EndGame',
+                        'gameID': gameID,
+                        'clientID' : clientID
+                    }
+                    ws.send(JSON.stringify(payload_game));
+                    return;
+                }
+                ws.send(JSON.stringify(payload_game));
+            } else {
+                celulas[1].classList.add('tiro-falhado');
+                const payload_game = {
+                    'method' : 'oponenteChance',
+                    'clientID': clientID,
+                    'gameID' : gameID,
+                    'tiro' : `${linha} ${coluna}`
+                }
+                ws.send(JSON.stringify(payload_game));
+            }
+            tiros.push({ linha, coluna });
+        }
+    </script>
+    <style>
+         * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        /* Estilo geral */
+        body {
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        header {
+            margin: 15px 15px 15px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: large;
+        }
+
+        .drag_container1 {
+            display: flex;
+            position: absolute;
+            justify-content: center;
+            width: 600px;
+            height: 55px;
+            top: 93%;
+        }
+
+        .drag_container2{
+            display: flex;
+            position: absolute;
+            justify-content: center;
+            width: 600px;
+            height: 55px;
+            top: 102%;
+        }
+
+        .container_play1 {
+            display: table-cell;
+            float: left;
+            margin-left: 50px;
+            margin-right: 20px;
+            width: 600px;
+            height: 100%;
+        }
+
+        .container_play2 {
+            display: none;
+            float: right;
+            margin-left: 20px;
+            margin-right: 50px;
+            width: 600px;
+            height: 100%;
+        }
+
+
+        /* Tabuleiro */
+        .tabuleiro {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            margin: 10px 10px 10px 10px;
+            width: 550px;
+            height: 550px;
+            border: 1px solid black;
+        }
+
+        .celula {
+            width: 55px;
+            height: 55px;
+            border: 1px solid #ccc;
+            text-align: center;
+            justify-content: center;
+            line-height: 55px;
+        }
+
+        .numeros {
+            width: 30px;
+            height: 560px;
+            padding-top: 10px;
+            float: left;
+        }
+
+        .tabuleiro1 {
+            display: table-cell;
+            width: 600px;
+            height: 600px;
+            float: left;
+            margin-right: 40px;
+        }
+
+        .tabuleiro2 {
+            display: grid;
+            width: 600px;
+            height: 560px;
+            float: right;
+        }
+
+        .numero {
+            width: 30px;
+            height: 55px;
+            padding-bottom: 1px;
+            float: left;
+        }
+
+        .letras {
+            display: flex;
+            position: absolute;
+            bottom: 80px;
+            padding-left: 30px;
+            width: 580px;
+            height: 30px;
+        }
+
+        h3 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 400px;
+            height: 300px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            margin: 0;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        p {
+            display: grid;
+            place-items: center;
+        }
+
+        .letra {
+            width: 59px;
+            height: 30px;
+            float: left;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #fundo {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ccc;
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        #caixa {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 300px;
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            z-index: 2;
+            display: none;
+        }
+
+        .portaAviao {
+            width: 55px;
+            height: 55px;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .encouracado {
+            width: 55px;
+            height: 55px;
+            background-color: #f3770a;
+            color: white;
+        }
+
+        .cruzador {
+            width: 55px;
+            height: 55px;
+            background-color: #f019e6;
+            color: white;
+        }
+
+        .submarino {
+            width: 55px;
+            height: 55px;
+            background-color: #f7f70f;
+            color: white;
+        }
+
+        .hidroAviao {
+            width: 55px;
+            height: 55px;
+            background-color: #ad07df;
+            color: white;
+        }
+
+        .portaAviaoD {
+            width: 275px;
+            height: 55px;
+            margin: 0px 5px 0px 5px;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .encouracadoD {
+            width: 220px;
+            height: 55px;
+            margin: 0px 5px 0px 5px;
+            background-color: #f3770a;
+            color: white;
+        }
+
+        .cruzadorD {
+            width: 110px;
+            height: 55px;
+            margin: 0px 5px 0px 5px;
+            background-color: #f019e6;
+            color: white;
+        }
+
+        .submarinoD {
+            width: 55px;
+            height: 55px;
+            margin: 0px 5px 0px 5px;
+            background-color: #f7f70f;
+            color: white;
+        }
+
+        .hidroAviaoD {
+            width: 165px;
+            height: 55px;
+            margin: 0px 5px 0px 5px;
+            background-color: #ad07df;
+            color: white;
+        }
+
+        /* Tiro acertado */
+        .tiro-acertado {
+            background-color: #2ae227;
+            color: white;
+        }
+
+        /* Tiro falhado */
+        .tiro-falhado {
+            background-color: #eb0c0c;
+            color: white;
+        }
+
+        .invisible {
+            display: none;
+        }
+
+        .enter {
+            border: dashed 2px #bbb;
+        }
+    </style>
+</body>
+</html>

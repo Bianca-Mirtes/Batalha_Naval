@@ -1,0 +1,260 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+/* Estilo geral */
+body {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+header {
+    margin: 15px 15px 15px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: large;
+}
+
+.drag_container1 {
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    width: 600px;
+    height: 55px;
+    top: 93%;
+}
+
+.drag_container2{
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    width: 600px;
+    height: 55px;
+    top: 102%;
+}
+
+.container_play1 {
+    display: table-cell;
+    float: left;
+    margin-left: 50px;
+    margin-right: 20px;
+    width: 600px;
+    height: 100%;
+}
+
+.container_play2 {
+    display: none;
+    float: right;
+    margin-left: 20px;
+    margin-right: 50px;
+    width: 600px;
+    height: 100%;
+}
+
+
+/* Tabuleiro */
+.tabuleiro {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    margin: 10px 10px 10px 10px;
+    width: 550px;
+    height: 550px;
+    border: 1px solid black;
+}
+
+.celula {
+    width: 55px;
+    height: 55px;
+    border: 1px solid #ccc;
+    text-align: center;
+    justify-content: center;
+    line-height: 55px;
+}
+
+.numeros {
+    width: 30px;
+    height: 560px;
+    padding-top: 10px;
+    float: left;
+}
+
+.tabuleiro1 {
+    display: table-cell;
+    width: 600px;
+    height: 600px;
+    float: left;
+    margin-right: 40px;
+}
+
+.tabuleiro2 {
+    display: grid;
+    width: 600px;
+    height: 560px;
+    float: right;
+}
+
+.numero {
+    width: 30px;
+    height: 55px;
+    padding-bottom: 1px;
+    float: left;
+}
+
+.letras {
+    display: flex;
+    position: absolute;
+    bottom: 80px;
+    padding-left: 30px;
+    width: 580px;
+    height: 30px;
+}
+
+h3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 400px;
+    height: 300px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+p {
+    display: grid;
+    place-items: center;
+}
+
+.letra {
+    width: 59px;
+    height: 30px;
+    float: left;
+    justify-content: center;
+    text-align: center;
+}
+
+#fundo {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ccc;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+#caixa {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 300px;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    z-index: 2;
+    display: none;
+}
+
+.portaAviao {
+    width: 55px;
+    height: 55px;
+    background-color: #007bff;
+    color: white;
+}
+
+.encouracado {
+    width: 55px;
+    height: 55px;
+    background-color: #f3770a;
+    color: white;
+}
+
+.cruzador {
+    width: 55px;
+    height: 55px;
+    background-color: #f019e6;
+    color: white;
+}
+
+.submarino {
+    width: 55px;
+    height: 55px;
+    background-color: #f7f70f;
+    color: white;
+}
+
+.hidroAviao {
+    width: 55px;
+    height: 55px;
+    background-color: #ad07df;
+    color: white;
+}
+
+.portaAviaoD {
+    width: 275px;
+    height: 55px;
+    margin: 0px 5px 0px 5px;
+    background-color: #007bff;
+    color: white;
+}
+
+.encouracadoD {
+    width: 220px;
+    height: 55px;
+    margin: 0px 5px 0px 5px;
+    background-color: #f3770a;
+    color: white;
+}
+
+.cruzadorD {
+    width: 110px;
+    height: 55px;
+    margin: 0px 5px 0px 5px;
+    background-color: #f019e6;
+    color: white;
+}
+
+.submarinoD {
+    width: 55px;
+    height: 55px;
+    margin: 0px 5px 0px 5px;
+    background-color: #f7f70f;
+    color: white;
+}
+
+.hidroAviaoD {
+    width: 165px;
+    height: 55px;
+    margin: 0px 5px 0px 5px;
+    background-color: #ad07df;
+    color: white;
+}
+
+/* Tiro acertado */
+.tiro-acertado {
+    background-color: #2ae227;
+    color: white;
+}
+
+/* Tiro falhado */
+.tiro-falhado {
+    background-color: #eb0c0c;
+    color: white;
+}
+
+.invisible {
+    display: none;
+}
+
+.enter {
+    border: dashed 2px #bbb;
+}
